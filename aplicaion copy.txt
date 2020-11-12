@@ -1,0 +1,283 @@
+APLICACION CONSULTA IMAGENES-API-pixabay
+
+
+
+///////////// 1  inicio-components.js
+
+
+
+
+import React, { Component } from "react";
+
+import Hijo from "./hijo";
+
+import Resultado from "./resultado";
+
+class Inicio_component extends Component {
+  state = {
+    termino: "",
+    imagenes: [],
+    pagina: "",
+  };
+
+  scroll = () => {
+    const elemento = document.querySelector(".jumbotron");
+    elemento.scrollIntoView("smooth", "start");
+  };
+
+  paginaAnterior = () => {
+    let pagina = this.state.pagina;
+
+    if (pagina === 1) return null;
+    pagina -= 1;
+
+    this.setState(
+      {
+        pagina,
+      },
+      () => {
+        this.consultarApi();
+      }
+    );
+   
+    this.scroll();
+  };
+
+  paginaSiguiente = () => {
+    let pagina = this.state.pagina;
+
+    pagina += 1;
+
+    this.setState(
+      {
+        pagina,
+      },
+      () => {
+        this.consultarApi();
+        this.scroll();
+      }
+    );
+    
+  };
+
+  consultarApi = () => {
+    const termino2 = this.state.termino;
+    const pagina = this.state.pagina;
+
+    const url = `https://pixabay.com/api/videos/?key=18402047-6b273aa47a4885b1bf151809d&q=${termino2}&per_page=30&page=${pagina}`;
+
+    fetch(url)
+      .then((respuesta) => respuesta.json())
+      .then((resultado) => this.setState({ imagenes: resultado.hits }));
+  };
+
+  datosBusqueda = (termino) => {
+    this.setState(
+      {
+        termino: termino,
+        pagina: 1,
+      },
+      () => {
+        this.consultarApi();
+      }
+    );
+  };
+
+  render() {
+    return (
+      <div>
+        <div class="jumbotron">
+          <h3>Buscador de Imagenes</h3>
+
+          <hr class="my-4" />
+        </div>
+        <Hijo datosBusqueda={this.datosBusqueda} />
+        <Resultado
+          imagenes={this.state.imagenes}
+          paginaAnterior={this.paginaAnterior}
+          paginaSiguiente={this.paginaSiguiente}
+        />
+      </div>
+    );
+  }
+}
+export default Inicio_component;
+
+
+
+
+
+
+
+
+
+
+///////////// 2 hijo.js
+
+
+
+import React, { Component } from "react";
+
+class Hijo extends Component {
+  busquedaRef = React.createRef();
+
+  obtenerDatos = (e) => {
+    e.preventDefault();
+
+    //leer ref
+    const termino = this.busquedaRef.current.value;
+
+        this.props.datosBusqueda(termino);
+
+  };
+
+  render() {
+    return (
+      <div>
+       
+
+        <form onSubmit={this.obtenerDatos}>
+          <div className="row">
+       
+
+            <div className="form-group col-md-8">
+              <input
+                type="text"
+                ref={this.busquedaRef}
+                className="form-control form-control-lg"
+                placeholder="Buscar tu imagen. Ejemplo: futbol "
+              />
+            </div>
+            <div className="form-group col-md-8">
+              <input
+                type="submit"
+                className="btn btn-danger btn-block"
+                value="Buscar"
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+    );
+  }
+}
+
+export default Hijo;
+
+/////// 3  imagen.js
+
+import React from "react";
+
+const Imagen = (props) => {
+  const { pageURL, likes, userImageURL, tags, views } = props.imagen;
+  return (
+    <div className="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+      <div className="card">
+        <img src={userImageURL} alt={tags} className="card-img-top" />
+
+        <div className="car-body">
+          <p className="card-text">{likes}Me gusta</p>
+          <p className="card-text">{views}Visitas</p>
+
+          <a href={pageURL} target="_blank"              className="btn btn-primary btn-block" >Ver imagen</a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Imagen;
+
+
+/////////// 4  paginacion.js
+
+import React from "react";
+
+const Paginacion = (props) => {
+  return (
+    <div className="py-3">
+      <button
+        onClick={props.paginaAnterior}
+        type="button"
+        className="btn btn-info mr-1"
+      >
+        {" "}
+        Anterrior &larr;{" "}
+      </button>
+      <button
+        onClick={props.paginaSiguiente}
+        type="button"
+        className="btn btn-info"
+      >
+        {" "}
+        Siguiente &rarr;{" "}
+      </button>
+    </div>
+  );
+};
+export default Paginacion;
+
+//// 5  Resultado.js
+
+import React, { Component } from "react";
+
+import Imagen from "./imagen";
+import Paginacion from "./paginacion";
+
+class Resultado extends Component {
+  mostrarImagenes = () => {
+    const imagenes = this.props.imagenes;
+    if (imagenes.length === 0) return null;
+
+   
+    return (
+      <React.Fragment>
+        <div className="col-12 p-5 row">
+          {imagenes.map((imagen) => (
+            <Imagen key={imagen.id} imagen={imagen} />
+          ))}
+        </div>
+        <div className="row justify-content-center">
+          <Paginacion
+            paginaAnterior={this.props.paginaAnterior}
+            paginaSiguiente={this.props.paginaSiguiente}
+          />
+        </div>
+      </React.Fragment>
+    );
+  };
+
+  render() {
+    return <React.Fragment>{this.mostrarImagenes()}</React.Fragment>;
+  }
+}
+
+export default Resultado;
+
+////  boottarp
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+      integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    
+
+    <!--bootstrapcdn -->
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+      integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+      crossorigin="anonymous"
+    ></script>
